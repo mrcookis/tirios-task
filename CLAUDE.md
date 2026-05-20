@@ -4,44 +4,76 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a recruitment task project. The main Python application is in `main.py`.
+Recruitment task project built with FastAPI, SQLAlchemy (async), and PostgreSQL. Environment managed by `uv`.
+
+## Environment Setup
+
+```bash
+# Create virtual environment (Python 3.11)
+uv venv --python 3.11
+
+# Install all dependencies (runtime + dev)
+uv sync --dev
+
+# Copy and fill in environment variables
+cp .env.example .env
+```
 
 ## Development Commands
 
-### Running the application
+### Run the development server
 ```bash
-python main.py
+uv run uvicorn main:app --reload
 ```
 
-### Testing (once tests are added)
+### Run tests
 ```bash
-# Run all tests
-python -m pytest
-
-# Run a specific test
-python -m pytest tests/test_file.py::test_name -v
+uv run pytest
+uv run pytest tests/test_health.py::test_health_check -v
 ```
 
-### Linting and formatting (once tools are configured)
+### Database migrations (Alembic)
 ```bash
-# Run linter
-pylint main.py
+# Generate a new migration (after changing models)
+uv run alembic revision --autogenerate -m "describe change"
 
-# Format code
-black main.py
+# Apply migrations
+uv run alembic upgrade head
+
+# Rollback one step
+uv run alembic downgrade -1
+```
+
+### Add a dependency
+```bash
+uv add <package>          # runtime
+uv add --dev <package>    # dev only
 ```
 
 ## Code Structure
 
-The project is currently in early stages with the main implementation in `main.py`. As the task develops, organize code into:
-- `main.py` — entry point and core logic
-- `tests/` — test files (follow pytest conventions)
-- Additional modules as needed
+```
+tirios-task/
+├── main.py               # FastAPI app entry point
+├── app/
+│   ├── core/
+│   │   └── config.py     # Pydantic Settings (reads from .env)
+│   └── api/
+│       └── routes/
+│           └── health.py # Example route
+├── alembic/              # Database migrations
+├── tests/
+│   ├── conftest.py       # Shared fixtures (async HTTP client)
+│   └── test_health.py
+├── pyproject.toml        # Project metadata and dependencies
+├── alembic.ini           # Alembic configuration
+├── .env                  # Local environment variables (not committed)
+└── .env.example          # Template for .env
+```
 
 ## Common Development Patterns
 
-When implementing the recruitment task:
-1. Keep logic modular and testable
-2. Use descriptive variable and function names
-3. Add docstrings to public functions
-4. Write tests alongside features
+- Add new routes in `app/api/routes/`, include the router in `main.py`
+- Define SQLAlchemy models, then run `alembic revision --autogenerate` to create migrations
+- Access settings via `from app.core.config import settings`
+- Tests use an `AsyncClient` fixture from `tests/conftest.py`
