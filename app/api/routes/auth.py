@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -29,11 +29,10 @@ async def login(
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(credentials.password, user.hashed_password):
-        raise Exception("Invalid email or password")
-        # raise HTTPException(
-        #     status_code=status.HTTP_401_UNAUTHORIZED,
-        #     detail="Invalid email or password",
-        # )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
 
     if not user.is_active:
         raise HTTPException(
@@ -65,7 +64,7 @@ async def logout(
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     current_user.token = None
-    current_user.created_at = datetime.now(timezone.utc)
+    current_user.created_at = datetime.now(UTC)
     db.add(current_user)
     await db.commit()
 

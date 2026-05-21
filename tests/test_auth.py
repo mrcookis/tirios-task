@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.db.models.user import User
-from app.services.auth import create_access_token, create_refresh_token, verify_password
+from app.services.auth import create_access_token, create_refresh_token
 from main import app
 
 # Pre-hashed password for "password123" to avoid bcrypt during test setup
@@ -25,7 +25,7 @@ async def client_with_mocked_db():
         hashed_password=HASHED_PASSWORD,
         is_active=True,
         token=None,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     inactive_user = User(
         id=2,
@@ -34,7 +34,7 @@ async def client_with_mocked_db():
         hashed_password=HASHED_PASSWORD,
         is_active=False,
         token=None,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
 
     users_by_email = {
@@ -60,12 +60,18 @@ async def client_with_mocked_db():
         # For select queries, we'll use a simple heuristic:
         # Check the query object's whereclause to see what's being filtered
         if hasattr(query_obj, "whereclause"):
-            clause_str = str(query_obj.whereclause).lower() if query_obj.whereclause else ""
+            clause_str = (
+                str(query_obj.whereclause).lower() if query_obj.whereclause else ""
+            )
 
             # Check for email comparisons
-            if "test@example.com" in clause_str or ("email" in clause_str and "test" in clause_str):
+            if "test@example.com" in clause_str or (
+                "email" in clause_str and "test" in clause_str
+            ):
                 result.user = users_by_email["test@example.com"]
-            elif "inactive@example.com" in clause_str or ("email" in clause_str and "inactive" in clause_str):
+            elif "inactive@example.com" in clause_str or (
+                "email" in clause_str and "inactive" in clause_str
+            ):
                 result.user = users_by_email["inactive@example.com"]
             # Check for ID comparisons
             elif "= 1" in clause_str or "1" in clause_str and "id" in clause_str:
@@ -85,7 +91,9 @@ async def client_with_mocked_db():
         return mock_db
 
     app.dependency_overrides[get_db] = get_db_override
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         yield client
     app.dependency_overrides.clear()
 
@@ -141,7 +149,7 @@ async def test_login_inactive_user(client_with_mocked_db):
 
 @pytest.mark.asyncio
 async def test_logout_success(client_with_mocked_db):
-    original_created_at = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    original_created_at = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
     test_user = User(
         id=1,
         name="Test User",

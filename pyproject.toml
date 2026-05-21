@@ -20,9 +20,52 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
     "httpx>=0.27.0",
+    "pre-commit>=3.0.0",
+    "ruff>=0.4.0",
 ]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+# Enable rule sets that match flake8, black, and pylint
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes (logical errors)
+    "I",      # isort (import sorting)
+    "N",      # pep8-naming
+    "ANN",    # flake8-annotations (missing type annotations)
+    "ARG",    # flake8-unused-arguments
+    "BLE",    # flake8-blind-except
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+    "RET",    # flake8-return
+    "RSE",    # flake8-raise
+    "PIE",    # flake8-pie
+    "B",      # flake8-bugbear
+    "UP",     # pyupgrade
+    "PLR",    # pylint refactoring
+    "PLE",    # pylint errors
+]
+
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Unused imports are sometimes intentional in __init__.py
+"app/api/**" = ["B008"]  # FastAPI Depends() calls in defaults are the correct pattern
+"tests/**" = [
+    "ANN001",   # Test functions don't need parameter type annotations
+    "ANN101",   # Test methods don't need self annotation
+    "ANN201",   # Test functions often return None
+    "ANN202",   # Private test helpers don't need return annotations
+    "ANN204",   # Test __init__ methods don't need annotations
+    "PLR2004",  # Test assertions often use magic values (status codes, etc)
+]

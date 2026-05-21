@@ -6,8 +6,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
 from app.core.config import settings
+from app.db.base import Base
 
 config = context.config
 
@@ -17,8 +17,6 @@ if config.config_file_name is not None:
 # Set the DB URL from pydantic settings so alembic.ini doesn't hold credentials
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
-# Import your models' Base.metadata here for autogenerate support:
-from app.db.base import Base
 target_metadata = Base.metadata
 
 
