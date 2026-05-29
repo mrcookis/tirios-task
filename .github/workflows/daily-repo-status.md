@@ -16,8 +16,6 @@ permissions:
 
 network: defaults
 
-engine: copilot
-
 tools:
   github:
     # If in a public repo, setting `lockdown: false` allows
